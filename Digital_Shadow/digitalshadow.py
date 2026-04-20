@@ -13,7 +13,7 @@ WHITE = (255,255,255)
 
 def robot(start_pos: int, radius=10):
     draw.circle(screen, WHITE, start_pos, radius, width=1)
-
+ 
 
 
 def main():
