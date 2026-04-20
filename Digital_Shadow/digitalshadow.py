@@ -23,7 +23,7 @@ class Robot:
         
 
     def draw_robot(self, angle=0): # Angle 0 = straight up, Rotates clockwise
-        self.angle = angle
+        # self.angle = self.get_robot_facing()
         angle += 270 # To compensate that makes 0 be up
         angle_rad = angle * (math.pi / 180) # Converts the degrees to radians
 
@@ -40,14 +40,12 @@ class Robot:
 
 def main():
     run = True
+    screen.fill((0,0,0))
 
     # Initializing objects
     robot1 = Robot((300,200)) # Initializing Robot object
 
     while run:
-
-        screen.fill((0,0,0))
-
         # create rectangle example
         # draw.rect(screen, WHITE, (250, 150, 100, 100), width=1)
 
@@ -59,7 +57,8 @@ def main():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
+                pygame.quit()
+                quit()
         
         pygame.display.flip()
 
