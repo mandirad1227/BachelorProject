@@ -66,14 +66,6 @@ while running:
             3
         )
 
-  # tekst
-    sensor_text = font.render("Sensor", True, (255, 255, 255))
-    bin_top_text = font.render("Bin 1", True, (255, 255, 255))
-    bin_bottom_text = font.render("Bin 2", True, (255, 255, 255))
-
-    screen.blit(sensor_text, (570, 325))
-    screen.blit(bin_top_text, (720, 280))
-    screen.blit(bin_bottom_text, (720, 400))
 
     pygame.display.flip()
     clock.tick(60)
