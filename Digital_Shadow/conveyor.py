@@ -15,6 +15,11 @@ font = pygame.font.SysFont(None, 28)
 belt_vertical = pygame.Rect(300, 140, 60, 260)
 belt_horizontal = pygame.Rect(300, 340, 320, 60)
 
+sensor = pygame.Rect(600, 355, 20, 30)
+# velg hvor dem sklal søppelkase
+bin_top = pygame.Rect(700, 50, 100, 80)
+bin_bottom = pygame.Rect(700, 370, 100, 80)
+
 running = True
 while running:
     for event in pygame.event.get():
@@ -26,6 +31,16 @@ while running:
     # Conveyor belts
     pygame.draw.rect(screen, (80, 80, 80), belt_vertical)
     pygame.draw.rect(screen, (80, 80, 80), belt_horizontal)
+
+     # sensor
+    pygame.draw.rect(screen, (255, 255, 0), sensor)
+    pygame.draw.rect(screen, (255, 255, 255), sensor, 2)
+
+    # bins
+    pygame.draw.rect(screen, (0, 100, 255), bin_top)
+    pygame.draw.rect(screen, (255, 60, 60), bin_bottom)
+    pygame.draw.rect(screen, (255, 255, 255), bin_top, 2)
+    pygame.draw.rect(screen, (255, 255, 255), bin_bottom, 2)
 
     # Kantlinjer
     pygame.draw.rect(screen, (160, 160, 160), belt_vertical, 3)
@@ -50,6 +65,15 @@ while running:
             (x, belt_horizontal.bottom - 5),
             3
         )
+
+  # tekst
+    sensor_text = font.render("Sensor", True, (255, 255, 255))
+    bin_top_text = font.render("Bin 1", True, (255, 255, 255))
+    bin_bottom_text = font.render("Bin 2", True, (255, 255, 255))
+
+    screen.blit(sensor_text, (570, 325))
+    screen.blit(bin_top_text, (720, 280))
+    screen.blit(bin_bottom_text, (720, 400))
 
     pygame.display.flip()
     clock.tick(60)
