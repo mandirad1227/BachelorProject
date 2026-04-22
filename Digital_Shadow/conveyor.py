@@ -57,6 +57,6 @@ pygame.quit()
 sys.exit()
 
 
-#  python3 main.py
+#  python3 main.py   
 #  cd ~/Desktop/pygame_test
 # kilder legg til kilder her youtube, reddit og alt.
