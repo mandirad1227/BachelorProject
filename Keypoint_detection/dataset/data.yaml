@@ -1,0 +1,8 @@
+path: cube_detection/dataset
+train: images/train
+val: images/val
+
+nc: 1
+names: ["cube"]
+
+kpt_shape: [8, 3]  # 8 keypoints, 3 valeurs (x, y, visibility)

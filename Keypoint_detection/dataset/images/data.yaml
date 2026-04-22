@@ -1,0 +1,6 @@
+path: Keypoint_detection/dataset/images
+train: train
+val: train  # si tu n'as pas encore de dossier val, tu peux utiliser train aussi
+
+names:
+  0: cube
