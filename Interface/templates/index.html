@@ -1,0 +1,139 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <style>
+    .hidden {
+        display: none !important;
+    }
+    </style>
+
+    <meta charset="UTF-8">
+    <title>Interface Utilisateur</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light text-center">
+
+<div class="container py-5">
+    <h1 class="mb-4 text-center">DOBOT SORTING INTERFACE - USER </h1>
+
+    <div class="row justify-content-center align-items-start">
+        <!-- === Tableau centré quand affiché === -->
+        {% if show_tables %}
+        <div class="col-md-4 text-center" id="color-table">
+            <h5 class="mb-3">Radioactivity Value</h5>
+            <form method="post">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Color</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for color, value in color_ratios.items() %}
+                        <tr>
+                            <td>{{ color }}</td>
+                            <td>
+                                <input type="text" class="form-control" name="{{ color }}" value="{{ value }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" name="save_ratios" class="btn btn-success">
+                    💾 Save
+                </button>
+            </form>
+            <!-- Bouton toggle juste sous le tableau -->
+            <form method="post" class="mt-3">
+                <button class="btn btn-outline-secondary btn-sm" name="toggle_tables" type="submit">
+                    <i class="bi bi-layout-sidebar-inset"></i> Show/Hide tables
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- === Boutons centraux === -->
+        <div class="col-md-6 text-center">
+            <form method="post" class="d-flex justify-content-center flex-wrap">
+                <button name="home" value="1" class="btn btn-secondary m-2" type="submit">HOME</button>
+                <button name="stop" class="btn btn-danger m-2" type="submit">EMERGENCY STOP</button>
+                <button name="lancer_scenario" class="btn btn-primary m-2" type="submit">START SCENARIO</button>
+
+                <div class="mt-2 w-100">
+                    <div class="form-check form-check-inline small">
+                        <input class="form-check-input" type="radio" name="scenario_mode" id="sync" value="sync" checked>
+                        <label class="form-check-label" for="sync">Sync</label>
+                    </div>
+                    <div class="form-check form-check-inline small">
+                        <input class="form-check-input" type="radio" name="scenario_mode" id="async" value="async">
+                        <label class="form-check-label" for="async">Async</label>
+                    </div>
+                </div>
+            </form>
+
+            <div class="my-4">
+                <h5>Status :</h5>
+                <p class="text-info">{{ status }}</p>
+            </div>
+        </div>
+    </div>
+
+    {% if show_tables %}
+    <!-- === Images en dessous (l’une à gauche, l’autre à droite) === -->
+    <div class="row justify-content-between mt-4">
+        <div class="col-md-5 text-start">
+            <img id="image1" src="{{ url_for('static', filename='dossier1/capture_1.jpg') }}" width="320" class="mb-3">
+        </div>
+        <div class="col-md-5 text-end">
+            <img id="image2" src="{{ url_for('static', filename='dossier2/capture_2.jpg') }}" width="320">
+        </div>
+    </div>
+
+    {% else %}
+    <!-- === Mode sans tableau : images large + bouton toggle en dessous === -->
+    <div class="row justify-content-between mt-4">
+        <div class="col-md-5 text-end">
+            <img id="image1" src="{{ url_for('static', filename='dossier1/capture_1.jpg') }}" width="300">
+        </div>
+        <div class="col-md-5 text-start">
+            <img id="image2" src="{{ url_for('static', filename='dossier2/capture_2.jpg') }}" width="300">
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <form method="post">
+            <button class="btn btn-outline-secondary btn-sm" name="toggle_tables" type="submit">
+                <i class="bi bi-layout-sidebar-inset"></i> Show/Hide tables
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+
+<script>
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+</script>
+
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+<script>
+  const socket = io();
+
+  socket.on('update_image', () => {
+    console.log("🔄 Nouvelle image détectée !");
+    const timestamp = new Date().getTime(); // Anti-cache
+    document.getElementById("image1").src = "/static/dossier1/capture_1.jpg?t=" + timestamp;
+    document.getElementById("image2").src = "/static/dossier2/capture_2.jpg?t=" + timestamp;
+  });
+</script>
+
+
+
+
+</body>
+
+</html>
