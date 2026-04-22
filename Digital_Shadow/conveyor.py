@@ -9,6 +9,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("L-shaped Conveyor Belts")
 
 clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 28)
 
 # OKI DEnne flytter mer til midten bruk denne for å få den i i midten. 
 belt_vertical = pygame.Rect(300, 140, 60, 260)
