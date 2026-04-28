@@ -16,9 +16,12 @@ belt_vertical = pygame.Rect(300, 140, 60, 260)
 belt_horizontal = pygame.Rect(300, 340, 320, 60)
 
 sensor = pygame.Rect(600, 355, 20, 30)
-# velg hvor dem sklal søppelkase
-bin_top = pygame.Rect(700, 50, 100, 80)
-bin_bottom = pygame.Rect(700, 370, 100, 80)
+
+# velg hvor dem skal være søppelkasse
+bin_top = pygame.Rect(630, 310, 60, 45)
+bin_bottom = pygame.Rect(230, 105, 60, 45)
+
+
 
 running = True
 while running:
