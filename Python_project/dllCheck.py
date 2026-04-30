@@ -16,7 +16,7 @@ Notes
 import pefile
 from paths import PROJECT_ROOT  # + add this line
 
-DLL_PATH = str((PROJECT_ROOT / "Python project" / "DobotDll.dll").resolve())  # + replace the line
+DLL_PATH = str((PROJECT_ROOT / "Python_project" / "DobotDll.dll").resolve())  # + replace the line
 
 
 def list_exports(dll_path: str) -> None:
