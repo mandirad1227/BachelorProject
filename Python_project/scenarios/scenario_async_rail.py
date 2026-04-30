@@ -225,7 +225,7 @@ def Find_cubes(image_path: str):
         source=image_path,
         save=True,
         save_txt=True,
-        conf=0.05,
+        conf=0.5,
         project=str(Path(BASE_DIR) / "results"),
         name=analyse_name,
     )
@@ -334,7 +334,7 @@ def detect_red_corners(image_path, debug=True):
     for cnt in contours:
         area = cv2.contourArea(cnt)
         print("area:", area)
-        if 75 < area < 500:
+        if 60 < area < 200:
             M = cv2.moments(cnt)
             if M["m00"] != 0:
                 cx = int(M["m10"] / M["m00"])
