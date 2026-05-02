@@ -18,9 +18,21 @@ belt_horizontal = pygame.Rect(300, 340, 320, 60)
 sensor = pygame.Rect(600, 355, 20, 30)
 
 # velg hvor dem skal være søppelkasse
-bin_top = pygame.Rect(630, 310, 60, 45)
-bin_bottom = pygame.Rect(230, 105, 60, 45)
+bin_top = pygame.Rect(370, 150, 35, 28)  
+bin_bottom = pygame.Rect(575, 305, 35, 28)  
 
+
+def draw_trash_bin(rect, lid_color):  # ny funksjon prøv den
+    pygame.draw.rect(screen, (120, 120, 120), rect) 
+    pygame.draw.rect(screen, (255, 255, 255), rect, 2)  
+
+    lid = pygame.Rect(rect.left - 3, rect.top - 5, rect.width + 6, 5)  
+    pygame.draw.rect(screen, (150, 150, 150), lid)  # ENDRET - grått lokk
+    pygame.draw.rect(screen, (255, 255, 255), lid, 2)  #
+
+    pygame.draw.rect(screen, lid_color, (rect.left + 4, rect.top + 5, rect.width - 8, 6))  
+    pygame.draw.line(screen, (80, 80, 80), (rect.left + 10, rect.top + 12), (rect.left + 10, rect.bottom - 4), 2)  
+    pygame.draw.line(screen, (80, 80, 80), (rect.right - 10, rect.top + 12), (rect.right - 10, rect.bottom - 4), 2)  
 
 
 running = True
@@ -40,10 +52,8 @@ while running:
     pygame.draw.rect(screen, (255, 255, 255), sensor, 2)
 
     # bins
-    pygame.draw.rect(screen, (0, 100, 255), bin_top)
-    pygame.draw.rect(screen, (255, 60, 60), bin_bottom)
-    pygame.draw.rect(screen, (255, 255, 255), bin_top, 2)
-    pygame.draw.rect(screen, (255, 255, 255), bin_bottom, 2)
+    draw_trash_bin(bin_top, (255, 60, 60))  
+    draw_trash_bin(bin_bottom, (0, 100, 255))  
 
     # Kantlinjer
     pygame.draw.rect(screen, (160, 160, 160), belt_vertical, 3)
