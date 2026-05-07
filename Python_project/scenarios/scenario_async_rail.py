@@ -296,6 +296,48 @@ def apply_homography(H, point):
     return transformed[:2].tolist()
 
 
+def calculate_last_corner(corners):
+    # First find what x and y is not shared 
+    # A: x1,y1
+    # B: x2,y1
+    # C: x1,y2 unknown
+    # D: x2,y2
+    x_values = []
+    y_values = []
+    for corner in corners:
+        x_values.append(corner[0])
+        y_values.append(corner[1])
+
+    largest = 0
+    for i in range(len(corners)):
+        # x1 = 140 x2 = 150, x3 = 490
+        # x1 - x2, x1 - x3
+        # x2 - x1, x2 - x3
+        # x3 - x1, x3 - x2
+        
+        
+    """
+    stored_x_values = []
+    for x_value in x_values:
+        for stored in stored_x_values:
+            if (x_value - 20) <= stored <= (x_value + 20):
+                for x in x_values:
+                    x_values.remove(x_value)
+            else:
+                stored_x_values.append(x_value)
+    
+    stored_y_values = []
+    for y_value in y_values:
+        for stored in stored_y_values:
+            if (y_value - 20) <= stored <= (y_value + 20):
+                for y in y_values:
+                    y_values.remove(y_value)
+            else:
+                stored_y_values.append(y_value)
+    """
+    last_corner = (x_values[0],y_values[0])
+    return last_corner
+
 def detect_red_corners(image_path, debug=True):
     """
     Detect four red dots (corners) for homography calibration.
@@ -342,6 +384,14 @@ def detect_red_corners(image_path, debug=True):
                 red_corners.append((cx, cy))
 
     print("we have:", len(red_corners), "corners")
+    if len(red_corners) == 3:
+        print("3 corners detected; calculating last corner")
+        for corner in range(len(red_corners)):
+            print(f"Corner {corner}: {red_corners[corner]}")
+        last_corner = calculate_last_corner(red_corners)
+        red_corners.append(last_corner)
+        print(f"Last corner: {last_corner}")
+        
     if len(red_corners) != 4:
         debug_image = image.copy()
         for i, (x, y) in enumerate(red_corners):
@@ -489,7 +539,7 @@ def pick_and_place(rail_x, x_loc, y_loc):
 BASE_DIR = str(PROJECT_ROOT)
 
 # Camera parameters
-camera_name = "Logi C270 HD WebCam"  # Set to 2 or 0 depending on your camera
+camera_name = " Logi C270 HD WebCam"  # Set to 2 or 0 depending on your camera
 save_directory = os.path.join(BASE_DIR, "Bounding_box_detection", "dataset", "test", "images")
 filename = "capture_1.jpg"
 save_path = os.path.join(save_directory, filename)
