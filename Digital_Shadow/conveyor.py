@@ -21,6 +21,8 @@ sensor = pygame.Rect(600, 355, 20, 30)
 bin_top = pygame.Rect(370, 150, 35, 28)  
 bin_bottom = pygame.Rect(575, 305, 35, 28)  
 
+animation_offset = 0  # animasjon 1
+
 
 def draw_trash_bin(rect, lid_color):  # ny funksjon prøv den
     pygame.draw.rect(screen, (120, 120, 120), rect) 
@@ -41,6 +43,10 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+    animation_offset += 1  # animasjon 2
+    if animation_offset >= 25:  # animasjon 3
+        animation_offset = 0  # animasjon 4
+
     screen.fill((0, 0, 0))  # endre til kanskje litt mer lysere svart hør med sander?
 
     # Conveyor belts
@@ -60,7 +66,7 @@ while running:
     pygame.draw.rect(screen, (160, 160, 160), belt_horizontal, 3)
 
     # Stripene mine vertikalt
-    for y in range(belt_vertical.top + 15, belt_vertical.bottom, 25):
+    for y in range(belt_vertical.top + 15 + animation_offset - 25, belt_vertical.bottom, 25):  # animasjon 5
         pygame.draw.line(
             screen,
             (200, 200, 200),
@@ -70,7 +76,7 @@ while running:
         )
 
     # Stripene mine horisontalt
-    for x in range(belt_horizontal.left + 15, belt_horizontal.right, 25):
+    for x in range(belt_horizontal.left + 15 + animation_offset - 25, belt_horizontal.right, 25):  # animasjon 6
         pygame.draw.line(
             screen,
             (200, 200, 200),
