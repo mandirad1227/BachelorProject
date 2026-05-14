@@ -30,6 +30,7 @@ import time
 import math
 import signal
 import shutil
+from statistics import mean
 
 import cv2
 import numpy as np
@@ -295,48 +296,65 @@ def apply_homography(H, point):
     print("In robot frame, the coordinate is:", transformed[:2].tolist())
     return transformed[:2].tolist()
 
-
-def calculate_last_corner(corners):
-    # First find what x and y is not shared 
-    # A: x1,y1
-    # B: x2,y1
-    # C: x1,y2 unknown
-    # D: x2,y2
-    x_values = []
-    y_values = []
-    for corner in corners:
-        x_values.append(corner[0])
-        y_values.append(corner[1])
-
-    largest = 0
-    for i in range(len(corners)):
-        # x1 = 140 x2 = 150, x3 = 490
-        # x1 - x2, x1 - x3
-        # x2 - x1, x2 - x3
-        # x3 - x1, x3 - x2
-        
-        
+def _group_close(values, sensitivity):
     """
-    stored_x_values = []
-    for x_value in x_values:
-        for stored in stored_x_values:
-            if (x_value - 20) <= stored <= (x_value + 20):
-                for x in x_values:
-                    x_values.remove(x_value)
-            else:
-                stored_x_values.append(x_value)
-    
-    stored_y_values = []
-    for y_value in y_values:
-        for stored in stored_y_values:
-            if (y_value - 20) <= stored <= (y_value + 20):
-                for y in y_values:
-                    y_values.remove(y_value)
-            else:
-                stored_y_values.append(y_value)
+    Group numeric values that are within tolerance of each other.
+    Returns list of groups (each group is list of original values).
     """
-    last_corner = (x_values[0],y_values[0])
-    return last_corner
+    groups = []
+    for v in values:
+        placed = False
+        for g in groups:
+            if abs(v - mean(g)) <= sensitivity:
+                g.append(v)
+                placed = True
+                break
+        if not placed:
+            groups.append([v])
+    return groups
+
+def calculate_last_corner(corners, sensitivity=20.0):
+    """
+    corners: iterable of three (x,y) pairs (floats or ints)
+    sensitivity: tolerance for considering coordinates equal (same units as coordinates)
+    Returns: (x,y) tuple for the missing fourth corner (floats)
+    """
+    # Makes sure that there are only 3 corners as the functions expects that
+    if len(corners) != 3:
+        raise ValueError("Expected exactly 3 corner points")
+
+    xs = [c[0] for c in corners]
+    ys = [c[1] for c in corners]
+
+    x_groups = _group_close(xs, sensitivity)
+    y_groups = _group_close(ys, sensitivity)
+
+    # Function to help find 
+    def choose_missing(groups):
+        # If we have 2 groups we choose the group that has a unique value, as that is the missing corner
+        if len(groups) == 2:
+            if len(groups[0]) == 1 and len(groups[1]) == 2:
+                return mean(groups[0]), mean(groups[1])
+            if len(groups[1]) == 1 and len(groups[0]) == 2:
+                return mean(groups[1]), mean(groups[0])
+        # If we only have one group then that means all the corner points are rougly the same area or the sensitiviy is off
+        if len(groups) == 1:
+            raise ValueError("Could not find two similar values, either adjust sensitivity or there is false corners.")
+        # if we have 3 groups then it finds each corner unique, and we have to adjust sensitiviy or something is wrong with the camera reading.
+        if len(groups) == 3:
+            raise ValueError("Could not find two similar values, either adjust sensitivity or there is false corners.")
+        # Worst case it returns the mean of the first groups
+        vals = [mean(g) for g in groups]
+        if len(vals) >= 2:
+            return vals[0], vals[1]
+        return mean(groups[0]), mean(groups[0])
+
+    x_single, x_paired = choose_missing(x_groups)
+    y_single, y_paired = choose_missing(y_groups)
+    if (float(x_single),float(y_single)) in corners:
+        raise ValueError("Got one of the points that was inputed out, should not happen. Likely a rogue point not part of the zone.")
+    return (float(x_single), float(y_single))
+
 
 def detect_red_corners(image_path, debug=True):
     """
@@ -376,7 +394,7 @@ def detect_red_corners(image_path, debug=True):
     for cnt in contours:
         area = cv2.contourArea(cnt)
         print("area:", area)
-        if 60 < area < 200:
+        if 60 < area < 300:
             M = cv2.moments(cnt)
             if M["m00"] != 0:
                 cx = int(M["m10"] / M["m00"])
