@@ -26,8 +26,8 @@ import DobotDllType as dType  # kept for parity with original, even if not used 
 # ===============================
 # Roles associated with fixed COM ports (set manually in Windows)
 DOBOT_ROLES = {
-    "convoyeur": "COM3",
-    "rail": "COM5",
+    "convoyeur": "COM4",
+    "rail": "COM3",
 }
 
 

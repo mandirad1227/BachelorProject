@@ -30,6 +30,7 @@ import time
 import math
 import signal
 import shutil
+from statistics import mean
 
 import cv2
 import numpy as np
@@ -295,6 +296,65 @@ def apply_homography(H, point):
     print("In robot frame, the coordinate is:", transformed[:2].tolist())
     return transformed[:2].tolist()
 
+def _group_close(values, sensitivity):
+    """
+    Group numeric values that are within tolerance of each other.
+    Returns list of groups (each group is list of original values).
+    """
+    groups = []
+    for v in values:
+        placed = False
+        for g in groups:
+            if abs(v - mean(g)) <= sensitivity:
+                g.append(v)
+                placed = True
+                break
+        if not placed:
+            groups.append([v])
+    return groups
+
+def calculate_last_corner(corners, sensitivity=20.0):
+    """
+    corners: iterable of three (x,y) pairs (floats or ints)
+    sensitivity: tolerance for considering coordinates equal (same units as coordinates)
+    Returns: (x,y) tuple for the missing fourth corner (floats)
+    """
+    # Makes sure that there are only 3 corners as the functions expects that
+    if len(corners) != 3:
+        raise ValueError("Expected exactly 3 corner points")
+
+    xs = [c[0] for c in corners]
+    ys = [c[1] for c in corners]
+
+    x_groups = _group_close(xs, sensitivity)
+    y_groups = _group_close(ys, sensitivity)
+
+    # Function to help find 
+    def choose_missing(groups):
+        # If we have 2 groups we choose the group that has a unique value, as that is the missing corner
+        if len(groups) == 2:
+            if len(groups[0]) == 1 and len(groups[1]) == 2:
+                return mean(groups[0]), mean(groups[1])
+            if len(groups[1]) == 1 and len(groups[0]) == 2:
+                return mean(groups[1]), mean(groups[0])
+        # If we only have one group then that means all the corner points are rougly the same area or the sensitiviy is off
+        if len(groups) == 1:
+            raise ValueError("Could not find two similar values, either adjust sensitivity or there is false corners.")
+        # if we have 3 groups then it finds each corner unique, and we have to adjust sensitiviy or something is wrong with the camera reading.
+        if len(groups) == 3:
+            raise ValueError("Could not find two similar values, either adjust sensitivity or there is false corners.")
+        # Worst case it returns the mean of the first groups
+        vals = [mean(g) for g in groups]
+        if len(vals) >= 2:
+            return vals[0], vals[1]
+        return mean(groups[0]), mean(groups[0])
+
+    x_single, x_paired = choose_missing(x_groups)
+    y_single, y_paired = choose_missing(y_groups)
+    if (float(x_single),float(y_single)) in corners:
+        raise ValueError("Got one of the points that was inputed out, should not happen. Likely a rogue point not part of the zone.")
+    return (float(x_single), float(y_single))
+
 
 def detect_red_corners(image_path, debug=True):
     """
@@ -334,7 +394,7 @@ def detect_red_corners(image_path, debug=True):
     for cnt in contours:
         area = cv2.contourArea(cnt)
         print("area:", area)
-        if 60 < area < 200:
+        if 60 < area < 300:
             M = cv2.moments(cnt)
             if M["m00"] != 0:
                 cx = int(M["m10"] / M["m00"])
@@ -342,6 +402,14 @@ def detect_red_corners(image_path, debug=True):
                 red_corners.append((cx, cy))
 
     print("we have:", len(red_corners), "corners")
+    if len(red_corners) == 3:
+        print("3 corners detected; calculating last corner")
+        for corner in range(len(red_corners)):
+            print(f"Corner {corner}: {red_corners[corner]}")
+        last_corner = calculate_last_corner(red_corners)
+        red_corners.append(last_corner)
+        print(f"Last corner: {last_corner}")
+        
     if len(red_corners) != 4:
         debug_image = image.copy()
         for i, (x, y) in enumerate(red_corners):
@@ -489,7 +557,7 @@ def pick_and_place(rail_x, x_loc, y_loc):
 BASE_DIR = str(PROJECT_ROOT)
 
 # Camera parameters
-camera_name = "Logi C270 HD WebCam"  # Set to 2 or 0 depending on your camera
+camera_name = " Logi C270 HD WebCam"  # Set to 2 or 0 depending on your camera
 save_directory = os.path.join(BASE_DIR, "Bounding_box_detection", "dataset", "test", "images")
 filename = "capture_1.jpg"
 save_path = os.path.join(save_directory, filename)

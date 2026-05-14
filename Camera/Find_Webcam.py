@@ -16,8 +16,8 @@ from typing import List, Optional
 # --------- Listing des caméras (Windows) ---------
 def list_ds_cameras() -> List[str]:
     """
-    Retourne la liste des caméras DirectShow par leur 'friendly name'.
-    Nécessite PowerShell (présent par défaut sur Windows).
+    Return the list of DirectShow cameras by their 'friendly name'.
+    Requires PowerShell (present by default on Windows).
     """
     try:
         ps_cmd = [
