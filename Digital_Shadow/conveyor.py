@@ -18,8 +18,8 @@ belt_horizontal = pygame.Rect(300, 340, 320, 60)
 sensor = pygame.Rect(600, 355, 20, 30)
 
 # velg hvor dem skal være søppelkasse
-bin_top = pygame.Rect(370, 150, 35, 28)  
-bin_bottom = pygame.Rect(575, 305, 35, 28)  
+bin_top = pygame.Rect(625, 370, 35, 28)  
+bin_bottom = pygame.Rect(260, 370, 35, 28)  
 
 animation_offset = 0  # animasjon 1
 
