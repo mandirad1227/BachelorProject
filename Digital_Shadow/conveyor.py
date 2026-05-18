@@ -1,4 +1,6 @@
+# Imports
 import pygame
+from pygame import draw
 import sys
 import math
 
@@ -11,17 +13,27 @@ pygame.display.set_caption("L-shaped Conveyor Belts")
 clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 28)
 
+# Sander sin del
+#colours
+WHITE = (255,255,255)
+
 # OKI DEnne flytter mer til midten bruk denne for å få den i i midten. 
 belt_vertical = pygame.Rect(300, 140, 60, 260)
 belt_horizontal = pygame.Rect(300, 340, 320, 60)
 
-sensor = pygame.Rect(600, 355, 20, 30)
+sensor = pygame.Rect(280, 310, 20, 30) 
 
 # velg hvor dem skal være søppelkasse
 bin_top = pygame.Rect(625, 370, 35, 28)  
 bin_bottom = pygame.Rect(260, 370, 35, 28)  
 
 animation_offset = 0  # animasjon 1
+
+
+# Sander sin del
+def robot(start_pos: int, radius=10):
+    draw.circle(screen, WHITE, start_pos, radius, width=1)
+ 
 
 
 def draw_trash_bin(rect, lid_color):  # ny funksjon prøv den
@@ -61,12 +73,15 @@ while running:
     draw_trash_bin(bin_top, (255, 60, 60))  
     draw_trash_bin(bin_bottom, (0, 100, 255))  
 
+    # Sander sin del
+    robot((430, 250))
+
     # Kantlinjer
     pygame.draw.rect(screen, (160, 160, 160), belt_vertical, 3)
     pygame.draw.rect(screen, (160, 160, 160), belt_horizontal, 3)
 
     # Stripene mine vertikalt
-    for y in range(belt_vertical.top + 15 + animation_offset - 25, belt_vertical.bottom, 25):  # animasjon 5
+    for y in range(belt_vertical.top + 15 + animation_offset - 25, belt_horizontal.top - 5, 25):  # animasjon 5
         pygame.draw.line(
             screen,
             (200, 200, 200),
