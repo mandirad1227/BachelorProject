@@ -1,0 +1,19 @@
+# --- Core web ---
+Flask==3.1.1
+Flask-SocketIO==5.5.1
+eventlet==0.40.2
+
+# --- Vision / ML (YOLOv8 inference & training) ---
+opencv-python==4.11.0.86
+numpy==2.3.1
+matplotlib==3.10.3
+ultralytics==8.3.159
+torch==2.7.1
+torchvision==0.22.1
+
+# --- Utils / I/O ---
+requests==2.32.4
+pyserial==3.4
+
+# --- Optional: DLL inspection tool (dllCheck.py) ---
+pefile==2024.8.26
