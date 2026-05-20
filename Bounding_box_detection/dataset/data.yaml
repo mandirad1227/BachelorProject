@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['cube']
+
+roboflow:
+  workspace: oceam
+  project: cube_detection_test
+  version: 4
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/oceam/cube_detection_test/dataset/4
