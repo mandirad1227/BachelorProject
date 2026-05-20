@@ -30,6 +30,7 @@ import time
 import math
 import signal
 import shutil
+from statistics import mean
 
 import cv2
 import numpy as np
@@ -169,9 +170,12 @@ def compute_local_pick_point(image_point, r=255):
     global H_0
 
     X_cube, Y_cube = apply_homography(H_0, image_point)
-
+    print(f"Debug test cube edge: x={X_cube} y={Y_cube}")
     try:
-        Y_local = np.sqrt(r**2 - X_cube**2)
+        if X_cube > r:
+            Y_local = 0
+        else:
+            Y_local = np.sqrt(r**2 - X_cube**2)
     except Exception as e:
         Y_local = 0
         print("Exception:", e)
@@ -243,7 +247,7 @@ def Find_cubes(image_path: str):
 
     # Copy the annotated image to the web interface static folder
     saved_image_path = os.path.join(BASE_DIR, "results", analyse_name, image_filename)
-    dest_folder = str(PROJECT_ROOT / "Interface" / "static" / "dossier2")
+    dest_folder = str(PROJECT_ROOT / "Interface" / "static" / "dossier1")
     os.makedirs(dest_folder, exist_ok=True)
     dest_path = os.path.join(dest_folder, os.path.basename(saved_image_path))
     shutil.copy2(saved_image_path, dest_path)
@@ -295,6 +299,65 @@ def apply_homography(H, point):
     print("In robot frame, the coordinate is:", transformed[:2].tolist())
     return transformed[:2].tolist()
 
+def _group_close(values, sensitivity):
+    """
+    Group numeric values that are within tolerance of each other.
+    Returns list of groups (each group is list of original values).
+    """
+    groups = []
+    for v in values:
+        placed = False
+        for g in groups:
+            if abs(v - mean(g)) <= sensitivity:
+                g.append(v)
+                placed = True
+                break
+        if not placed:
+            groups.append([v])
+    return groups
+
+def calculate_last_corner(corners, sensitivity=20.0):
+    """
+    corners: iterable of three (x,y) pairs (floats or ints)
+    sensitivity: tolerance for considering coordinates equal (same units as coordinates)
+    Returns: (x,y) tuple for the missing fourth corner (floats)
+    """
+    # Makes sure that there are only 3 corners as the functions expects that
+    if len(corners) != 3:
+        raise ValueError("Expected exactly 3 corner points")
+
+    xs = [c[0] for c in corners]
+    ys = [c[1] for c in corners]
+
+    x_groups = _group_close(xs, sensitivity)
+    y_groups = _group_close(ys, sensitivity)
+
+    # Function to help find 
+    def choose_missing(groups):
+        # If we have 2 groups we choose the group that has a unique value, as that is the missing corner
+        if len(groups) == 2:
+            if len(groups[0]) == 1 and len(groups[1]) == 2:
+                return mean(groups[0]), mean(groups[1])
+            if len(groups[1]) == 1 and len(groups[0]) == 2:
+                return mean(groups[1]), mean(groups[0])
+        # If we only have one group then that means all the corner points are rougly the same area or the sensitiviy is off
+        if len(groups) == 1:
+            raise ValueError("Could not find two similar values, either adjust sensitivity or there is false corners.")
+        # if we have 3 groups then it finds each corner unique, and we have to adjust sensitiviy or something is wrong with the camera reading.
+        if len(groups) == 3:
+            raise ValueError("Could not find two similar values, either adjust sensitivity or there is false corners.")
+        # Worst case it returns the mean of the first groups
+        vals = [mean(g) for g in groups]
+        if len(vals) >= 2:
+            return vals[0], vals[1]
+        return mean(groups[0]), mean(groups[0])
+
+    x_single, x_paired = choose_missing(x_groups)
+    y_single, y_paired = choose_missing(y_groups)
+    if (float(x_single),float(y_single)) in corners:
+        raise ValueError("Got one of the points that was inputed out, should not happen. Likely a rogue point not part of the zone.")
+    return (float(x_single), float(y_single))
+
 
 def detect_red_corners(image_path, debug=True):
     """
@@ -330,11 +393,10 @@ def detect_red_corners(image_path, debug=True):
 
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     red_corners = []
-
     for cnt in contours:
         area = cv2.contourArea(cnt)
         print("area:", area)
-        if 60 < area < 200:
+        if 40 < area < 300:
             M = cv2.moments(cnt)
             if M["m00"] != 0:
                 cx = int(M["m10"] / M["m00"])
@@ -342,6 +404,14 @@ def detect_red_corners(image_path, debug=True):
                 red_corners.append((cx, cy))
 
     print("we have:", len(red_corners), "corners")
+    if len(red_corners) == 3:
+        print("3 corners detected; calculating last corner")
+        for corner in range(len(red_corners)):
+            print(f"Corner {corner}: {red_corners[corner]}")
+        last_corner = calculate_last_corner(red_corners)
+        red_corners.append(last_corner)
+        print(f"Last corner: {last_corner}")
+        
     if len(red_corners) != 4:
         debug_image = image.copy()
         for i, (x, y) in enumerate(red_corners):
@@ -358,8 +428,9 @@ def detect_red_corners(image_path, debug=True):
         cv2.imshow("Detected Corners", debug_image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-
-        raise ValueError(f"❌ Found {len(red_corners)} red points, 4 required.")
+        print(f"❌ Found {len(red_corners)} red points, 4 required.")
+        return []
+        #raise ValueError(f"❌ Found {len(red_corners)} red points, 4 required.")
 
     # Custom ordering based on the image orientation
     red_corners_sorted = sorted(red_corners, key=lambda p: p[1])
@@ -402,12 +473,17 @@ def detect_next_component():
     """
     global homography_done, H_0, cap
 
-    path_image = take_snapshot(
-        "C505e HD Webcam",
-        str(PROJECT_ROOT / "Keypoint_detection" / "dataset" / "test" / "images" / "capture_1.jpg")
-    )
-    
-    red_corner = detect_red_corners(path_image, debug=False)
+    red_corner = []
+    tries = 0
+
+    while len(red_corner) !=4 and tries < 5:
+        path_image = take_snapshot(
+            "C505e HD Webcam",
+            str(PROJECT_ROOT / "Keypoint_detection" / "dataset" / "test" / "images" / "capture_1.jpg")
+            )
+        red_corner = detect_red_corners(path_image, debug=False)
+        tries += 1
+        print(f"Attempt number: {tries}")
 
     if not homography_done:
         print("Computing homography…")
@@ -418,9 +494,15 @@ def detect_next_component():
     components_cam = Find_cubes(path_image)  # detection in image frame
 
     # Note: logic kept intact (first item is accessed before emptiness check in original code)
-    comp = components_cam[0]
-    x_cam, y_cam = comp["x"], comp["y"]
-    rail_x, x_loc, y_loc = compute_local_pick_point((x_cam, y_cam))
+    for comp in components_cam:
+        x_cam, y_cam = comp["x"], comp["y"]
+        rail_x, x_loc, y_loc = compute_local_pick_point((x_cam, y_cam))
+        if y_loc != 0:
+            break
+    
+    if y_loc == 0:
+        raise ValueError("Only one component left, and outside of reachable area!")
+    print("Going to ", x_loc," ", y_loc)
 
     if not components_cam:
         print("🔍 No components detected.")
@@ -489,7 +571,7 @@ def pick_and_place(rail_x, x_loc, y_loc):
 BASE_DIR = str(PROJECT_ROOT)
 
 # Camera parameters
-camera_name = "Logi C270 HD WebCam"  # Set to 2 or 0 depending on your camera
+camera_name = " Logi C270 HD WebCam"  # Set to 2 or 0 depending on your camera
 save_directory = os.path.join(BASE_DIR, "Bounding_box_detection", "dataset", "test", "images")
 filename = "capture_1.jpg"
 save_path = os.path.join(save_directory, filename)

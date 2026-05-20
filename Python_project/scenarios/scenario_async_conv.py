@@ -184,7 +184,7 @@ def Find_cubes(image_path: str):
         source=image_path,
         save=True,
         save_txt=True,
-        conf=0.05,
+        conf=0.5,
         project=str(Path(BASE_DIR) / "results"),
         name=analyse_name,
     )
@@ -278,9 +278,9 @@ def detect_red_corners(image_path: str, debug: bool = False):
 
     # --- Pass 1: HSV ---
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower1 = np.array([0, 70, 60], dtype=np.uint8)
+    lower1 = np.array([0, 100, 100], dtype=np.uint8)
     upper1 = np.array([10, 255, 255], dtype=np.uint8)
-    lower2 = np.array([160, 70, 60], dtype=np.uint8)
+    lower2 = np.array([160, 100, 100], dtype=np.uint8)
     upper2 = np.array([180, 255, 255], dtype=np.uint8)
     mask = cv2.inRange(hsv, lower1, upper1) | cv2.inRange(hsv, lower2, upper2)
 
@@ -304,6 +304,27 @@ def detect_red_corners(image_path: str, debug: bool = False):
                 continue
             cx, cy = int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"])
             pts.append((cx, cy))
+        for corner in range(len(pts)):
+            print(f"Corner {corner}: {pts[corner]}, Area: {areas[corner]}")
+
+    if len(pts) != 4 :
+        debug_image = img.copy()
+        for i, (x, y) in enumerate(pts):
+            cv2.circle(debug_image, (x, y), 10, (255, 0, 255), -1)
+            cv2.putText(
+                debug_image,
+                str(i + 1),
+                (x + 10, y - 10),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                (0, 255, 0),
+                2,
+            )
+        cv2.imshow("Detected Corners", debug_image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        #raise ValueError(f"❌ Found {len(pts)} red points, 4 required.")       
 
     # --- Fallback: Lab a‑channel if < 4 points ---
     if len(pts) < 4:
@@ -312,7 +333,7 @@ def detect_red_corners(image_path: str, debug: bool = False):
         _, m2 = cv2.threshold(a_chan, 150, 255, cv2.THRESH_BINARY)
         m2 = cv2.morphologyEx(m2, cv2.MORPH_OPEN, k, iterations=1)
         m2 = cv2.morphologyEx(m2, cv2.MORPH_CLOSE, k, iterations=1)
-        cnts2, _ = cv2.findContours(m2, cv2.RETR_INTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts2, _ = cv2.findContours(m2, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
         pts = []
         areas2 = [cv2.contourArea(c) for c in cnts2 if cv2.contourArea(c) > 5]
         if areas2:
@@ -346,6 +367,8 @@ def detect_red_corners(image_path: str, debug: bool = False):
             dists[chosen] = -1
             chosen.append(int(np.argmax(dists)))
         pts = [tuple(map(int, pts_np[i])) for i in chosen]
+
+    
 
     # Order: top‑left, top‑right, bottom‑left, bottom‑right
     pts_sorted = sorted(pts, key=lambda p: (p[1], p[0]))
@@ -458,7 +481,7 @@ def Is_Suction_On() -> None:
 def Sort_Non_Radioactive() -> None:
     """Release the cube and resume the conveyor for the non‑radioactive bin."""
     dType.SetEndEffectorSuctionCupEx(api_conv, 0, 1)
-    dType.SetPTPCmdEx(api_conv, 0, -33,  -216,  80, 0, 1)
+    dType.SetPTPCmdEx(api_conv, 0, REST_POS_X, REST_POS_Y, REST_POS_Z, 0, 1)
     dType.SetEMotorEx(api_conv, 0, 1, int(8000), 1)
     dType.dSleep(4000)
     dType.SetEMotorEx(api_conv, 0, 0, int(0), 1)
@@ -468,7 +491,7 @@ def Sort_Non_Radioactive() -> None:
 def Sort_Radioactive() -> None:
     """Release the cube and run the belt in reverse for the radioactive bin."""
     dType.SetEndEffectorSuctionCupEx(api_conv, 0, 1)
-    dType.SetPTPCmdEx(api_conv, 0, -33,  -216,  80, 0, 1)
+    dType.SetPTPCmdEx(api_conv, 0, REST_POS_X, REST_POS_Y, REST_POS_Z, 0, 1)
     dType.SetEMotorEx(api_conv, 0, 1, -int(8000), 1)
     dType.dSleep(5000)
     dType.SetEMotorEx(api_conv, 0, 0, int(0), 1)
@@ -521,7 +544,7 @@ def detect_next_component():
     print("distance hyopot :", np.hypot(pose[0] - x_loc, pose[1] - y_loc))
     
 
-    MAX_DIST_MM = 200
+    MAX_DIST_MM = 2000
     if np.hypot(pose[0] - x_loc, pose[1] - y_loc) > MAX_DIST_MM:
         print("Wrong cube detected — trying other candidates")
 
@@ -570,6 +593,9 @@ Place_Z = 15
 Place_radioactive_X = 150
 Place_radioactive_Y = 134
 Place_radioactive_Z = 15
+REST_POS_X = 135
+REST_POS_Y = -170
+REST_POS_Z = 80
 
 # Stepper constants for the belt (kept for parity with original)
 STEP_PER_CRICLE = 360.0 / 1.8 * 10.0 * 16.0
@@ -611,7 +637,7 @@ dType.SetQueuedCmdStartExec(api_conv)
 dType.SetColorSensor(api_conv, 1, 1, 1)
 dType.SetInfraredSensor(api_conv, 1, 2, 1)
 dType.dSleep(1000)
-dType.SetPTPCmdEx(api_conv, 0, -33, -216, 80, 0, 1)
+dType.SetPTPCmdEx(api_conv, 0, REST_POS_X, REST_POS_Y, REST_POS_Z, 0, 1)
 
 # Initialize camera
 
@@ -629,6 +655,7 @@ dType.SetEMotorEx(api_conv, 1, 1, -int(8000), 1)
 # Main loop
 while True:
     if dType.GetInfraredSensor(api_conv, 2)[0] == 1:
+        time.sleep(1.5)
         dType.SetEMotorEx(api_conv, 1, 0, int(0), 1)  # stop conveyor
 
         x_loc, y_loc = detect_next_component()
@@ -637,7 +664,7 @@ while True:
         if x_loc is None and y_loc is None:
             print("🛑 No cube detected. Ending cycle.")
             break
-
+        dType.SetPTPCmdEx(api_conv, 0, -33, -216, 80, 0, 1)
         dType.SetEndEffectorSuctionCupEx(api_conv, 1, 1)
         dType.SetPTPCmdEx(api_conv, 2, x_loc, y_loc, 50, 0, isQueued=1)
         dType.SetPTPCmdEx(api_conv, 2, x_loc, y_loc, 10, 0, isQueued=1)
