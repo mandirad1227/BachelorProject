@@ -27,6 +27,9 @@ sensor = pygame.Rect(280, 310, 20, 30)
 bin_top = pygame.Rect(625, 370, 35, 28)  
 bin_bottom = pygame.Rect(260, 370, 35, 28)  
 
+# ny grå søppelkasse
+bin_gray = pygame.Rect(465, 305, 35, 28)
+
 animation_offset = 0  # animasjon 1
 
 
@@ -71,10 +74,14 @@ while running:
 
     # bins
     draw_trash_bin(bin_top, (255, 60, 60))  
-    draw_trash_bin(bin_bottom, (0, 100, 255))  
+    draw_trash_bin(bin_bottom, (0, 100, 255))
+    draw_trash_bin(bin_gray, (170, 170, 170))  # ny grå søppelkasse
 
-    # Sander sin del
-    robot((430, 250))
+    # Sander sin del - robot 1
+    robot((280, 160))
+
+    # Sander sin del - robot 
+    robot((445, 320))
 
     # Kantlinjer
     pygame.draw.rect(screen, (160, 160, 160), belt_vertical, 3)
