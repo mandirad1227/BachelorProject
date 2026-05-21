@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Initialisation du Système</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>⚙️ Initialisation du Système Dobot</h2>
+    {% if status %}
+        <p><strong>{{ status }}</strong></p>
+    {% endif %}
+    <form method="post">
+        <button type="submit">Initialiser</button>
+    </form>
+</body>
+</html>

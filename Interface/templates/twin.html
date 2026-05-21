@@ -1,0 +1,19 @@
+<!-- templates/twin.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Jumeau Numérique</title>
+    <style>
+        iframe {
+            width: 100%;
+            height: 90vh;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h2 style="text-align:center;">Jumeau Numérique Unity</h2>
+    <iframe src="{{ url_for('static', filename='unity_build/index.html') }}"></iframe>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Interface Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light text-center">
+
+    <div class="container py-5">
+        <h1 class="mb-4">Interface de Tri Dobot - ADMIN</h1>
+
+        <!-- Boutons -->
+        <form method="post">
+            <button name="home" class="btn btn-secondary m-2" type="submit">HOME</button>
+            <button name="stop" class="btn btn-danger m-2" type="submit">EMERGENCY STOP</button>
+            <button name="detect" class="btn btn-primary m-2" type="submit">LANCER</button>
+        </form>
+
+        <!-- Statut -->
+        <div class="my-4">
+            <h5>Status :</h5>
+            <p class="text-info">{{ status }}</p>
+        </div>
+
+        <!-- Tableau des taux -->
+        <div class="my-5">
+            <h3>Taux de couleurs</h3>
+            <form method="post">
+                <table class="table table-bordered table-striped w-50 mx-auto">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Couleur</th>
+                            <th>Valeur</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for color, value in color_ratios.items() %}
+                        <tr>
+                            <td>{{ color }}</td>
+                            <td>
+                                <input type="number" step="0.01" name="{{ color }}" value="{{ value }}" class="form-control text-center">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" name="save_colors" class="btn btn-success">💾 Sauvegarder</button>
+            </form>
+        </div>
+
+        <!-- Liste des images -->
+        <div class="my-4">
+            <h3>Images capturées</h3>
+            <div class="row justify-content-center">
+                {% for image in images %}
+                <div class="col-md-3 mb-3">
+                    <img src="{{ url_for('static', filename='images/' + image) }}" class="img-fluid rounded border">
+                    <p class="mt-2">{{ image }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Déconnexion -->
+        <form method="post" action="{{ url_for('logout') }}">
+            <button class="btn btn-outline-dark mt-3">Déconnexion</button>
+        </form>
+    </div>
+
+</body>
+</html>
